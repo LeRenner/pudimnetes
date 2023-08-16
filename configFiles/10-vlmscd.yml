@@ -1,21 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vlmcsd-server
-  labels:
-    app: vlmcsd-server
+  name: vlmcsd-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vlmcsd-server
+      app: vlmcsd
   template:
     metadata:
       labels:
-        app: vlmcsd-server
+        app: vlmcsd
     spec:
       containers:
-      - name: vlmcsd-server
+      - name: vlmcsd-container
         image: mikolatero/vlmcsd
         ports:
         - containerPort: 1688
@@ -25,9 +23,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: vlmcsd-service
   labels:
-    app: vlmcsd-server
-  name: vlmcsd-server
+    app: vlmcsd
 spec:
   ports:
   - protocol: TCP
@@ -35,5 +33,5 @@ spec:
     port: 1688
     nodePort: 32000
   selector:
-    app: vlmcsd-server
+    app: vlmcsd
   type: NodePort
