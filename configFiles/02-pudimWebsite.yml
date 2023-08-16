@@ -13,10 +13,24 @@ spec:
         app: pudim-website
     spec:
       containers:
-      - name: pudim-website-container
-        image: lerenner/pudim-main-website:main
-        ports:
-        - containerPort: 80
+        - name: pudim-website-container
+          image: lerenner/pudim-main-website:main
+          ports:
+          - containerPort: 80
+        - name: tor-container
+          image: osminogin/tor-simple:latest
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/tor
+            - name: data-volume
+              mountPath: /var/lib/tor
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/tor/conf
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/tor/data
 
 ---
 
