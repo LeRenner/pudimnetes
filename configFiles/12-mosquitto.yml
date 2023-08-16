@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+      - name: mosquitto-container
+        image: eclipse-mosquitto:latest
+        ports:
+        - containerPort: 1883
+        env:
+        - name: ALLOW_UNSECURE_MODE
+          value: "true"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /mosquitto/config/
+      volumes:
+      - name: config-volume
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/mosquitto/
+      
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-service
+  labels:
+    app: mosquitto
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 1883
+    port: 1883
+    nodePort: 32032
+  selector:
+    app: mosquitto
+  type: NodePort
