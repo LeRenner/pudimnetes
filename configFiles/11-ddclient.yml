@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddclient-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ddclient
+  template:
+    metadata:
+      labels:
+        app: ddclient
+    spec:
+      containers:
+        - name: ddclient-container
+          image: lscr.io/linuxserver/ddclient:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Sao_Paulo"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/ddclient/config
