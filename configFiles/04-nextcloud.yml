@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      containers:
+        - name: nextcloud-container
+          image: lscr.io/linuxserver/nextcloud:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/nextcloud/config
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/nextcloud/data
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service
+spec:
+  selector:
+    app: nextcloud
+  ports:
+    - protocol: TCP
+      port: 80  # Port exposed within the cluster
+      targetPort: 80  # Port the pods are listening on
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: nextcloud.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: nextcloud-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - nextcloud.pudim.xyz
+      secretName: nextcloud-tls  # Secret name for the TLS certificate
