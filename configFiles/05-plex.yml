@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      containers:
+        - name: plex-container
+          image: lscr.io/linuxserver/plex:latest
+          ports:
+            - containerPort: 32400
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Sao_Paulo"
+            - name: version
+              value: "docker"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: series-volume
+              mountPath: /tv
+              readOnly: true
+            - name: movies-volume
+              mountPath: /movies
+              readOnly: true
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/plex/config
+        - name: series-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS/series
+        - name: movies-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS/movies
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex-service
+spec:
+  selector:
+    app: plex
+  ports:
+    - protocol: TCP
+      port: 32400  # Port exposed within the cluster
+      targetPort: 32400  # Port the pods are listening on
+      nodePort: 32400
+  type: NodePort
