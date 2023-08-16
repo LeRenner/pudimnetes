@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+        - name: jellyfin-container
+          image: jellyfin/jellyfin:latest
+          ports:
+            - containerPort: 8096  # Port your Jellyfin application listens on
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: cache-volume
+              mountPath: /cache
+            - name: media-volume
+              mountPath: /media
+            - name: music-volume
+              mountPath: /music
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/jellyfin/config
+        - name: cache-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/jellyfin/cache
+        - name: media-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS
+        - name: music-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Music/MUSIC
+
+---
+
+# jellyfin-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-service
+spec:
+  selector:
+    app: jellyfin
+  ports:
+    - protocol: TCP
+      port: 80  # Port exposed within the cluster
+      targetPort: 8096  # Port the pods are listening on
+  type: ClusterIP
+
+---
+
+# jellyfin-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: jellyfin.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: jellyfin-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - jellyfin.pudim.xyz
+      secretName: jellyfin-tls  # Secret name for the TLS certificate
