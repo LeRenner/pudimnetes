@@ -22,13 +22,26 @@ spec:
           value: "true"
         volumeMounts:
         - name: config-volume
-          mountPath: /mosquitto/config/
+          mountPath: /mosquitto/config
       volumes:
       - name: config-volume
-        hostPath:
-          path: /home/renner/mount/archive/archive/special/k8s/mosquitto/
-      
+        configMap:
+          name: mosquitto-config
 
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+data:
+  mosquitto.conf: |
+    allow_anonymous true
+    listener 1883
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest file /mosquitto/log/mosquitto.log
+      
 ---
 
 apiVersion: v1
