@@ -35,6 +35,54 @@ spec:
 ---
 
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddy-config
+data:
+  Caddyfile: |
+    :80 {
+        root * /var/www/html
+        encode gzip
+        file_server browse
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usp-archive-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usp-archive
+  template:
+    metadata:
+      labels:
+        app: usp-archive
+    spec:
+      containers:
+        - name: usp-archive-container
+          image: caddy:latest
+          ports:
+          - containerPort: 80
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/www/html
+            - name: config-volume
+              mountPath: /etc/caddy
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/usp/
+        - name: config-volume
+          configMap:
+            name: caddy-config
+          
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   name: pudim-service
@@ -68,6 +116,13 @@ spec:
         backend:
           service:
             name: pudim-service
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/usp"
+        backend:
+          service:
+            name: usp-archive
             port:
               number: 80
   tls:
