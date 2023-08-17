@@ -15,17 +15,33 @@ spec:
       containers:
         - name: ddclient-container
           image: lscr.io/linuxserver/ddclient:latest
-          env:
-            - name: PUID
-              value: "1000"
-            - name: PGID
-              value: "1000"
-            - name: TZ
-              value: "America/Sao_Paulo"
           volumeMounts:
             - name: config-volume
-              mountPath: /config
+              mountPath: /etc/ddclient
+            - name: secret-volume
+              mountPath: /secret
       volumes:
         - name: config-volume
-          hostPath:
-            path: /home/renner/mount/archive/archive/special/k8s/ddclient/config
+          configMap:
+            name: ddclient-config
+        - name: secret-volume
+          secret:
+            secretName: ddclient-secret
+
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddclient-config
+data:
+  ddclient.conf: |
+    ssl=yes
+    use=web,web=checkip-dyndns-org/
+    protocol=cloudflare
+    use=web,web=https://api.ipify.org/
+    login=$(cat /secret/login)
+    password=$(cat /secret/password)
+    zone=pudim.xyz
+    home.pudim.xyz
