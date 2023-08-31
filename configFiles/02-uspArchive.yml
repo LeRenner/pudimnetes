@@ -5,7 +5,11 @@ metadata:
 data:
   Caddyfile: |
     :80 {
-      uri strip_prefix /api
+      handle_path /usp/* {
+        reverse_proxy localhost:2000
+      }
+    }
+    :2000 {
       root * /var/www/html
       encode gzip
       file_server browse

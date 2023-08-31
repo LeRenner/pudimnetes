@@ -15,21 +15,6 @@ data:
 
 ---
 
-# torrc Configmap
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tor-configmap
-data:
-  torrc: |
-    Log debug
-    LogTimeGranularity 1
-    DataDirectory /tmp
-    HiddenServiceDir /var/tor
-    HiddenServicePort 80 localhost:80
-
----
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,23 +37,10 @@ spec:
           volumeMounts:
             - name: caddy-config-vol
               mountPath: /etc/caddy
-        # - name: tor-container
-        #   image: osminogin/tor-simple:latest
-        #   volumeMounts:
-        #     - name: tor-config-vol
-        #       mountPath: /etc/tor
-        #     - name: secret-key-vol
-        #       mountPath: /var/tor
       volumes:
-        # - name: tor-config-vol
-        #   configMap:
-        #     name: tor-configmap
         - name: caddy-config-vol
           configMap:
             name: caddy-configmap
-        # - name: secret-key-vol
-        #   secret:
-        #     secretName: tor-pudim-secret-key
           
 ---
 
@@ -108,7 +80,7 @@ spec:
             name: pudim-service
             port:
               number: 80
-      - path: /usp
+      - path: /usp/
         pathType: Prefix
         backend:
           service:
