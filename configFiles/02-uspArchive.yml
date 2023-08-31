@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: usp-configmap
+data:
+  Caddyfile: |
+    :80 {
+      uri strip_prefix /api
+      root * /var/www/html
+      encode gzip
+      file_server browse
+      log {
+          output file /tmp/access.log
+      }
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usp-archive-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usp-archive
+  template:
+    metadata:
+      labels:
+        app: usp-archive
+    spec:
+      containers:
+        - name: usp-archive-container
+          image: caddy:latest
+          ports:
+          - containerPort: 80
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/www/html
+            - name: config-volume
+              mountPath: /etc/caddy
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/usp/
+        - name: config-volume
+          configMap:
+            name: usp-configmap
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: usp-archive-service
+  labels:
+    app: usp-archive
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 80
+    port: 80
+  selector:
+    app: usp-archive
+  type: ClusterIP
