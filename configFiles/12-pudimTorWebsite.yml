@@ -1,0 +1,55 @@
+# torrc Configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tor-configmap
+data:
+  torrc: |
+    DataDirectory /var/tor
+    HiddenServiceDir /var/tor
+    HiddenServicePort 80 pudim-service.pudimnetes.svc.cluster.local:80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tor-pudim-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tor-pudim
+  template:
+    metadata:
+      labels:
+        app: tor-pudim
+    spec:
+      initContainers:
+        - name: copy-secrets
+          image: busybox
+          command: ["sh", "-c", "cp /var/tor/* /tor-data/ && chown -R 100:100 /tor-data && chmod -R 700 /tor-data"]
+          volumeMounts:
+            - name: tor-data-vol
+              mountPath: /tor-data
+            - name: secret-key-vol
+              mountPath: /var/tor
+      containers:
+        - name: tor-container
+          image: osminogin/tor-simple:latest
+          volumeMounts:
+            - name: tor-config-vol
+              mountPath: /etc/tor
+            - name: tor-data-vol
+              mountPath: /var/tor
+      volumes:
+        - name: tor-config-vol
+          configMap:
+            name: tor-configmap
+        - name: tor-data-vol
+          emptyDir: {}
+        - name: secret-key-vol
+          secret:
+            secretName: tor-pudim-secret-key
+
+
