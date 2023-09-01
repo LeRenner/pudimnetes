@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegram-messenger-configmap
+data:
+  hostname: |
+    mosquitto-service.pudimnetes.svc.cluster.local
+  port: |
+    1883
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-messenger-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegram-messenger
+  template:
+    metadata:
+      labels:
+        app: telegram-messenger
+    spec:
+      containers:
+        - name: telegram-messenger-container
+          image: lerenner/telegram-mqtt-messenger:main
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: telegram-messenger-configmap-volume
+              mountPath: /config
+            - name: telegram-messenger-secret-volume
+              mountPath: /secret
+      volumes:
+        - name: telegram-messenger-configmap-volume
+          configMap:
+            name: telegram-messenger-configmap
+            items:
+              - key: hostname
+                path: hostname
+              - key: port
+                path: port
+        - name: telegram-messenger-secret-volume
+          secret:
+            secretName: telegram-messenger-secret-key
+            items:
+              - key: token
+                path: token
+              - key: chat_id
+                path: chat_id
