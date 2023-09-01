@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webssh-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webssh
+  template:
+    metadata:
+      labels:
+        app: webssh
+    spec:
+      containers:
+        - name: webssh-container
+          image: lerenner/webssh:latest
+          ports:
+            - containerPort: 8888
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webssh-service
+spec:
+  selector:
+    app: webssh
+  ports:
+    - protocol: TCP
+      port: 8888
+      targetPort: 8888
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webssh-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ssh.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: webssh-service
+                port:
+                  number: 8888
+  tls:
+    - hosts:
+        - ssh.pudim.xyz
+      secretName: wehssh-tls
