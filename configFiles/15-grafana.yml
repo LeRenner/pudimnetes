@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-data-logger-configmap
+data:
+  main.txt: |
+    mosquitto-service.pudimnetes.svc.cluster.local
+    1883
+    dht22/humidity,dht22/temperature,fridge/temperature
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana-container
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-config-volume
+              mountPath: /var/lib/grafana
+        - name: influxdb-container
+          image: influxdb:latest
+          ports:
+            - containerPort: 8086
+          volumeMounts:
+            - name: influx-database-volume
+              mountPath: /var/lib/influxdb2
+        - name: mqtt-data-logger-container
+          image: lerenner/mqtt-data-logger:latest
+          volumeMounts:
+            - name: influx-database-volume
+              mountPath: /var/lib/influxdb2
+      volumes:
+        - name: grafana-config-volume
+          hostPath:
+            path: /home/renner/special/k8s/grafana/grafanaConfig
+        - name: influx-database-volume
+          hostPath:
+            path: /home/renner/special/k8s/grafana/influxDB
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+spec:
+  selector:
+    app: grafana
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: grafana.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: grafana-service
+                port:
+                  number: 3000
+  tls:
+    - hosts:
+        - grafana.pudim.xyz
+      secretName: grafana-tls
