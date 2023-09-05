@@ -32,6 +32,15 @@ spec:
           volumeMounts:
             - name: grafana-config-volume
               mountPath: /var/lib/grafana
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_NAME
+              value: "Main Org."
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Viewer"
+            - name: GF_AUTH_ANONYMOUS_HIDE_VERSION
+              value: "true"
         - name: influxdb-container
           image: influxdb:latest
           ports:
@@ -40,10 +49,15 @@ spec:
             - name: influx-database-volume
               mountPath: /var/lib/influxdb2
         - name: mqtt-data-logger-container
-          image: lerenner/mqtt-data-logger:latest
+          image: lerenner/mqtt-data-logger:main
+          imagePullPolicy: Always
           volumeMounts:
             - name: influx-database-volume
               mountPath: /var/lib/influxdb2
+            - name: mqtt-data-logger-configmap-volume
+              mountPath: /config
+            - name: grafana-secrets-volume
+              mountPath: /secrets
       volumes:
         - name: grafana-config-volume
           hostPath:
@@ -51,6 +65,22 @@ spec:
         - name: influx-database-volume
           hostPath:
             path: /home/renner/special/k8s/grafana/influxDB
+        - name: mqtt-data-logger-configmap-volume
+          configMap:
+            name: mqtt-data-logger-configmap
+            items:
+              - key: main.txt
+                path: main.txt
+        - name: grafana-secrets-volume
+          secret:
+            secretName: grafana-secrets
+            items:
+              - key: token
+                path: token
+              - key: org
+                path: org
+              - key: bucket
+                path: bucket
 
 ---
 
