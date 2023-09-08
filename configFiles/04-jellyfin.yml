@@ -68,7 +68,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: jellyfin.pudim.xyz
+    - host: jelly.pudim.xyz
       http:
         paths:
           - pathType: Prefix
@@ -80,5 +80,5 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - jellyfin.pudim.xyz
+        - jelly.pudim.xyz
       secretName: jellyfin-tls  # Secret name for the TLS certificate
