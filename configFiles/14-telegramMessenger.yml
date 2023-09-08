@@ -50,3 +50,7 @@ spec:
                 path: token
               - key: chat_id
                 path: chat_id
+              - key: token2
+                path: token2
+              - key: chat_id2
+                path: chat_id2
