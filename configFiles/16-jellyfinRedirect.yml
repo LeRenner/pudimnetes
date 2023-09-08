@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jellyfin-redirect-configmap
+data:
+  Caddyfile: |
+    :80 {
+      redir https://jelly.pudim.xyz{uri} 301
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin-redirect-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin-redirect
+  template:
+    metadata:
+      labels:
+        app: jellyfin-redirect
+    spec:
+      containers:
+        - name: jellyfin-redirect-container
+          image: caddy:latest
+          ports:
+          - containerPort: 80
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/caddy
+      volumes:
+        - name: config-volume
+          configMap:
+            name: jellyfin-redirect-configmap
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-redirect-service
+  labels:
+    app: jellyfin-redirect
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 80
+    port: 80
+  selector:
+    app: jellyfin-redirect
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-redirect-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: "jellyfin.pudim.xyz"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyfin-redirect-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - jellyfin.pudim.xyz
+    secretName: jellyfin-redirect-tls-secret
