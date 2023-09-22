@@ -7,6 +7,11 @@ data:
     mosquitto-service.pudimnetes.svc.cluster.local
   port: |
     1883
+  topics: |
+    pudimNotifier
+    pudimMail
+    danielMail
+
 
 ---
 
@@ -42,15 +47,13 @@ spec:
                 path: hostname
               - key: port
                 path: port
+              - key: topics
+                path: topics
         - name: telegram-messenger-secret-volume
           secret:
             secretName: telegram-messenger-secret-key
             items:
-              - key: token
-                path: token
-              - key: chat_id
-                path: chat_id
-              - key: token2
-                path: token2
-              - key: chat_id2
-                path: chat_id2
+              - key: tokens
+                path: tokens
+              - key: chatids
+                path: chatids
