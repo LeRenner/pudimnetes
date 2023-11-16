@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cafofo-craft-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cafofo-craft
+  template:
+    metadata:
+      labels:
+        app: cafofo-craft
+    spec:
+      containers:
+      - name: cafofo-craft-container
+        image: itzg/minecraft-server
+        ports:
+        - containerPort: 25565
+        env:
+        - name: EULA
+          value: "true"
+        - name: VERSION
+          value: "1.20.2"
+        - name: TYPE
+          value: "SPIGOT"
+        volumeMounts:
+          - name: data-volume
+            mountPath: /data
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/local/cafofoCraft
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cafofo-craft-service
+  labels:
+    app: cafofo-craft
+spec:
+  ports:
+  - name: minecraft
+    protocol: TCP
+    targetPort: 25565
+    port: 25565
+    nodePort: 32064
+  - name: minecraft-rcon
+    protocol: TCP
+    targetPort: 25575
+    port: 25575
+    nodePort: 32075
+  selector:
+    app: cafofo-craft
+  type: NodePort
