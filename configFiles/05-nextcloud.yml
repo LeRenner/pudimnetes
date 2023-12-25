@@ -59,7 +59,7 @@ metadata:
   name: nextcloud-ingress
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/ssl-redirect: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
