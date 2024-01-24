@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esphome-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esphome
+  template:
+    metadata:
+      labels:
+        app: esphome
+    spec:
+      hostNetwork: true
+      containers:
+      - name: esphome
+        image: esphome/esphome:latest  # Use the appropriate image tag
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+
+      volumes:
+      - name: config-volume
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/espHome/
