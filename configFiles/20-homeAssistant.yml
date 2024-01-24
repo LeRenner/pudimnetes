@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant-deployment
+spec:
+  replicas: 1  # You can adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: homeassistant
+  template:
+    metadata:
+      labels:
+        app: homeassistant
+    spec:
+      hostNetwork: true
+      containers:
+      - name: homeassistant-container
+        image: ghcr.io/home-assistant/home-assistant:stable
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        - name: localtime-volume
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: dbus-volume
+          mountPath: /run/dbus
+          readOnly: true
+      volumes:
+      - name: config-volume
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/homeAssistant/
+      - name: localtime-volume
+        hostPath:
+          path: /etc/localtime
+      - name: dbus-volume
+        hostPath:
+          path: /run/dbus
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant-service
+spec:
+  selector:
+    app: homeassistant
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8123
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homeassistant-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: homeassistant.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: homeassistant-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - homeassistant.pudim.xyz
+      secretName: homeassistant-tls  # Secret name for the TLS certificate
