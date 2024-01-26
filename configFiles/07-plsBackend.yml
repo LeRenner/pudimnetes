@@ -33,6 +33,8 @@ spec:
           volumeMounts:
             - name: pls-backend-configmap-volume
               mountPath: /config
+            - name: pls-backend-secrets-volume
+              mountPath: /secret
       volumes:
         - name: pls-backend-configmap-volume
           configMap:
@@ -42,6 +44,12 @@ spec:
                 path: hostname
               - key: port
                 path: port
+        - name: pls-backend-secrets-volume
+          secret:
+            secretName: pls-secrets
+            items:
+              - key: token
+                path: token
 
 ---
 
