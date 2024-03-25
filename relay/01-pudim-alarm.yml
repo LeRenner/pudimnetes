@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pudim-alarm-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pudim-alarm
+  template:
+    metadata:
+      labels:
+        app: pudim-alarm
+    spec:
+      containers:
+        - name: pudim-alarm-container
+          image: lerenner/pudim-alarm:main
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: pudim-alarm-volume
+              mountPath: /secrets
+      volumes:
+        - name: pudim-alarm-volume
+          secret:
+            secretName: telegram-alarm-secret
+            items:
+              - key: telegram.json
+                path: telegram.json
