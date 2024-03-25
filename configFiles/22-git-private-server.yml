@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: git-publickey-configmap
+data:
+  authorized_keys: |
+    ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKFRGDOB6X5IKGOOHsUzbrGKaqmxXTM5Bz3SIcWvmx8h renner@MrVirtualReborn
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-git-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: private-git-server
+  template:
+    metadata:
+      labels:
+        app: private-git-server
+    spec:
+      containers:
+        - name: private-git-server-container
+          image: lerenner/private-git-docker:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 22
+          volumeMounts:
+            - name: git-publickey-volume
+              mountPath: /k8sMounts/user-public-key
+            - name: git-projects-volume
+              mountPath: /projects
+            - name: git-hostkey-secret-volume
+              mountPath: /k8sMounts/host-private-key
+
+      volumes:
+        - name: git-publickey-volume
+          configMap:
+            name: git-publickey-configmap
+        - name: git-projects-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/git-projects
+        - name: git-hostkey-secret-volume
+          secret:
+            secretName: private-git-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-git-server-service
+  labels:
+    app: private-git-server
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 22
+    port: 22
+    nodePort: 32096
+  selector:
+    app: private-git-server
+  type: NodePort
