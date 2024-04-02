@@ -17,8 +17,10 @@ spec:
         image: haugene/transmission-openvpn
         imagePullPolicy: Always
         volumeMounts:
+          - name: media
+            mountPath: /videos
           - name: storage
-            mountPath: /data
+            mountPath: /downloads
           - name: config
             mountPath: /config
           - name: openvpn
@@ -61,9 +63,12 @@ spec:
             add:
               - NET_ADMIN
       volumes:
+        - name: media
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS
         - name: storage
           hostPath:
-            path: /home/renner/mount/archive/archive/special/k8s/transmission-openvpn/storage/
+            path: /home/renner/mount/archive/archive/special/k8s/transmission-openvpn/storage
         - name: config
           hostPath:
             path: /home/renner/mount/archive/archive/special/k8s/transmission-openvpn/configFiles/
