@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: icecast-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: icecast
+  template:
+    metadata:
+      labels:
+        app: icecast
+    spec:
+      containers:
+        - name: icecast-container
+          image: deepcomp/icecast2:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ICECAST_SOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: icecast-env-secret
+                  key: ICECAST_SOURCE_PASSWORD
+            - name: ICECAST_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: icecast-env-secret
+                  key: ICECAST_ADMIN
+            - name: ICECAST_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: icecast-env-secret
+                  key: ICECAST_ADMIN_PASSWORD
+            - name: ICECAST_SERVER_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: icecast-env-secret
+                  key: ICECAST_SERVER_HOST
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: icecast-nodeport-service
+  labels:
+    app: icecast
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 8000
+    port: 8000
+    nodePort: 32051
+  selector:
+    app: icecast
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: icecast-clusterip-service
+spec:
+  selector:
+    app: icecast
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: icecast-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: radio.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: icecast-clusterip-service
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - radio.pudim.xyz
+      secretName: icecast-tls
