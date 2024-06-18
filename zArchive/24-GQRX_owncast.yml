@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gqrx-owncast-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gqrx-owncast
+  template:
+    metadata:
+      labels:
+        app: gqrx-owncast
+    spec:
+      containers:
+        - name: gqrx-owncast-container
+          image: owncast/owncast:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+            - containerPort: 32035
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/gqrx-owncast/data
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: owncast-clusterip-service
+spec:
+  selector:
+    app: gqrx-owncast
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gqrx-owncast-service
+  labels:
+    app: gqrx-owncast
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 32035
+    port: 32035
+    nodePort: 32035
+  selector:
+    app: gqrx-owncast
+  type: NodePort
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gqrx-owncast-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: radio.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: owncast-clusterip-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - radio.pudim.xyz
+      secretName: gqrx-owncast-tls  # Secret name for the TLS certificate
