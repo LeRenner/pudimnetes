@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cristiana-website-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cristiana-website
+  template:
+    metadata:
+      labels:
+        app: cristiana-website
+    spec:
+      containers:
+        - name: cristiana-website-container
+          image: lerenner/cris-renner-website:main
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 80
+          
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cristiana-service
+  labels:
+    app: cristiana-website
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 80
+    port: 80
+  selector:
+    app: cristiana-website
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cristiana-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: "cristianarenner.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cristiana-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - cristianarenner.com
+    secretName: cristiana-tls-secret
+
