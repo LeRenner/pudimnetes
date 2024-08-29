@@ -35,7 +35,7 @@ spec:
           - name: SERVERPORT
             value: "32064"
           - name: PEERS
-            value: "32"
+            value: "256"
           - name: PEERDNS
             value: "auto"
           # - name: INTERNAL_SUBNET
