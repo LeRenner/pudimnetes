@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitwarden-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitwarden
+  template:
+    metadata:
+      labels:
+        app: bitwarden
+    spec:
+      containers:
+        - name: bitwarden-container
+          image: vaultwarden/server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: bitwarden-data
+              mountPath: /data/
+          env:
+            - name: SIGNUPS_ALLOWED
+              value: "false"
+      volumes:
+        - name: bitwarden-data
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/bitwarden/data
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitwarden-service
+spec:
+  selector:
+    app: bitwarden
+  ports:
+    - protocol: TCP
+      port: 80 
+      targetPort: 80 
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bitwarden-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bitwarden.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: bitwarden-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - bitwarden.pudim.xyz
+      secretName: bitwarden-tls
