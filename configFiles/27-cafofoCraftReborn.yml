@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reborn-cafofo-craft-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reborn-cafofo-craft
+  template:
+    metadata:
+      labels:
+        app: reborn-cafofo-craft
+    spec:
+      containers:
+      - name: reborn-cafofo-craft-container
+        image: itzg/minecraft-server
+        ports:
+        - containerPort: 25565
+        env:
+        - name: EULA
+          value: "true"
+        - name: VERSION
+          value: "1.21"
+        - name: TYPE
+          value: "SPIGOT"
+        - name: MEMORY
+          value: "4G"
+        volumeMounts:
+          - name: data-volume
+            mountPath: /data
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/local/rebornCafofoCraft
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: reborn-cafofo-craft-service
+  labels:
+    app: reborn-cafofo-craft
+spec:
+  ports:
+  - name: minecraft
+    protocol: TCP
+    targetPort: 25565
+    port: 25565
+    nodePort: 32028
+  - name: minecraft-rcon
+    protocol: TCP
+    targetPort: 25575
+    port: 25575
+    nodePort: 32074
+  selector:
+    app: reborn-cafofo-craft
+  type: NodePort

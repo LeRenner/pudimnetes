@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+        - name: jellyfin-container
+          image: jellyfin/jellyfin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8096  # Port your Jellyfin application listens on
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: cache-volume
+              mountPath: /cache
+            - name: media-volume
+              mountPath: /media
+            - name: music-volume
+              mountPath: /music
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/jellyfin/config
+        - name: cache-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/jellyfin/cache
+        - name: media-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS
+        - name: music-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/Music/MUSIC
