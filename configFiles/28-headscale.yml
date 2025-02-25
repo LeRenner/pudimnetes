@@ -92,6 +92,7 @@ spec:
 
       - name: headscale
         image: headscale/headscale:stable
+        imagePullPolicy: Always
         command: ["headscale", "serve"]
         env:
         - name: TZ
