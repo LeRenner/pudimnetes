@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jellyfin-vatares-publikey-configmap
+data:
+  authorized_keys: |
+    ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICJ9XTWUwp19kX8LrDjYIhYXL5oTO4yjmUG1XHYupwwu renner@VirtualiRenner
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin-vatares-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin-vatares
+  template:
+    metadata:
+      labels:
+        app: jellyfin-vatares
+    spec:
+      containers:
+        - name: jellyfin-vatares-container
+          image: jellyfin/jellyfin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8096  # Port your Jellyfin application listens on
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: cache-volume
+              mountPath: /cache
+            - name: music-volume
+              mountPath: /music
+        - name: private-git-server-container
+          image: lerenner/private-git-docker:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 22
+          volumeMounts:
+            - name: music-volume
+              mountPath: /music
+            - name: jellyfin-vatares-publikey-volume
+              mountPath: /k8sMounts/user-public-key
+            - name: vatares-jellyfin-git-server-volume
+              mountPath: /k8sMounts/host-private-key
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/vatares-jellyfin/config
+        - name: cache-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/vatares-jellyfin/cache
+        - name: music-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/vatares-jellyfin/music
+        - name: jellyfin-vatares-publikey-volume
+          configMap:
+            name: jellyfin-vatares-publikey-configmap
+        - name: vatares-jellyfin-git-server-volume
+          secret:
+            secretName: vatares-jellyfin-git-server-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-vatares-service
+spec:
+  selector:
+    app: jellyfin-vatares
+  ports:
+    - protocol: TCP
+      port: 80  # Port exposed within the cluster
+      targetPort: 8096  # Port the pods are listening on
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-git-server-service
+  labels:
+    app: private-git-server
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 22
+    port: 22
+    nodePort: 32041
+  selector:
+    app: private-git-server
+  type: NodePort
+
+---
+
+# jellyfin-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-vatares-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: vatares-jellyfin.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: jellyfin-vatares-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - vatares-jellyfin.pudim.xyz
+      secretName: jellyfin-vatares-tls  # Secret name for the TLS certificate
