@@ -34,7 +34,7 @@ spec:
             - name: cache-volume
               mountPath: /cache
             - name: music-volume
-              mountPath: /music
+              mountPath: /projects
         - name: private-git-server-container
           image: lerenner/private-git-docker:main
           imagePullPolicy: Always
@@ -84,9 +84,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: private-git-server-service
+  name: vatares-private-git-service
   labels:
-    app: private-git-server
+    app: jellyfin-vatares
 spec:
   ports:
   - protocol: TCP
@@ -94,7 +94,7 @@ spec:
     port: 22
     nodePort: 32041
   selector:
-    app: private-git-server
+    app: jellyfin-vatares
   type: NodePort
 
 ---
