@@ -34,7 +34,7 @@ spec:
             - name: cache-volume
               mountPath: /cache
             - name: music-volume
-              mountPath: /projects
+              mountPath: /music
         - name: private-git-server-container
           image: lerenner/private-git-docker:main
           imagePullPolicy: Always
