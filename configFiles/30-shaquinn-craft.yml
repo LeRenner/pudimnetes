@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shaquinn-craft-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shaquinn-craft
+  template:
+    metadata:
+      labels:
+        app: shaquinn-craft
+    spec:
+      containers:
+      - name: shaquinn-craft-container
+        image: itzg/minecraft-server
+        ports:
+        - containerPort: 25565
+        env:
+        - name: EULA
+          value: "true"
+        - name: TYPE
+          value: "SPIGOT"
+        - name: MEMORY
+          value: "6G"
+        volumeMounts:
+          - name: data-volume
+            mountPath: /data
+      volumes:
+        - name: data-volume
+          hostPath:
+            path: /home/renner/local/shaQuinnCraft
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: shaquinn-craft-service
+  labels:
+    app: shaquinn-craft
+spec:
+  ports:
+  - name: minecraft
+    protocol: TCP
+    targetPort: 25565
+    port: 25565
+    nodePort: 32028
+  - name: minecraft-rcon
+    protocol: TCP
+    targetPort: 25575
+    port: 25575
+    nodePort: 32074
+  selector:
+    app: shaquinn-craft
+  type: NodePort
