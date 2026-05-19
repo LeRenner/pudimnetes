@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: icloud-sync-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: icloud-sync
+  template:
+    metadata:
+      labels:
+        app: icloud-sync
+    spec:
+      containers:
+        - name: icloud-sync-container
+          image: mandarons/icloud-drive
+          imagePullPolicy: Always
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: ENV_CONFIG_FILE_PATH
+              value: "/config/config.yaml"
+          volumeMounts:
+            - name: timezone-volume
+              mountPath: /etc/timezone
+              readOnly: true
+            - name: localtime-volume
+              mountPath: /etc/localtime
+              readOnly: true
+            - name: icloud-photos
+              mountPath: /icloud/photos
+            - name: icloud-documents
+              mountPath: /icloud/drive
+            - name: config-volume
+              mountPath: /config
+            - name: keyring-volume
+              mountPath: /home/abc/.local
+      volumes:
+        - name: timezone-volume
+          hostPath:
+            path: /etc/timezone
+            type: File
+        - name: localtime-volume
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: icloud-photos
+          hostPath:
+            path: /home/renner/mount/archive/archive/Pictures/iCloudPhotos
+            type: DirectoryOrCreate
+        - name: icloud-documents
+          hostPath:
+            path: /home/renner/archive/zBackup/ONLINE_SERVICES/ICLOUD
+            type: DirectoryOrCreate
+        - name: config-volume
+          hostPath:
+            path: /home/renner/special/k8s/icloud/icloud-config
+            type: DirectoryOrCreate
+        - name: keyring-volume
+          hostPath:
+            path: /home/renner/special/k8s/icloud/icloud-keyring
+            type: DirectoryOrCreate
