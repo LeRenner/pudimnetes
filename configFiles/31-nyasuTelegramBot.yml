@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nyasu-telegram-bot-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nyasu-telegram-bot
+  template:
+    metadata:
+      labels:
+        app: nyasu-telegram-bot
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:16-alpine
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+        - name: nyasu-telegram-bot-container
+          image: lerenner/nyasu-telegram-bot:latest
+          imagePullPolicy: Always
+          env:
+            - name: BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: BOT_TOKEN
+            - name: OWNER_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: OWNER_CHAT_ID
+            - name: OWNER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: OWNER_USERNAME
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nyasu-telegram-bot-secret
+                  key: DATABASE_URL
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/nyasu-telegram-bot/postgres-data

@@ -17,6 +17,7 @@ spec:
         image: itzg/minecraft-server
         ports:
         - containerPort: 25565
+        - containerPort: 25575
         env:
         - name: EULA
           value: "true"
@@ -24,6 +25,10 @@ spec:
           value: "SPIGOT"
         - name: MEMORY
           value: "6G"
+        - name: ENABLE_RCON
+          value: "true"
+        - name: RCON_PASSWORD
+          value: "THIS IS NOT A REAL PASSWORD"
         volumeMounts:
           - name: data-volume
             mountPath: /data

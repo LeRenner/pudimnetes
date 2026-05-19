@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transmission-wireguard-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission-wireguard
+  template:
+    metadata:
+      labels:
+        app: transmission-wireguard
+    spec:
+      containers:
+      - name: transmission-wireguard-container
+        image: haugene/transmission-wireguard:main
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 9091
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        env:
+          - name: PUID
+            value: "1000"
+          - name: PGID
+            value: "1000"
+          - name: CONFIG_FILE
+            value: "/wg-config/nl-ams-wg-001.conf"
+        volumeMounts:
+          - name: media
+            mountPath: /videos
+          - name: storage
+            mountPath: /downloads
+          - name: config
+            mountPath: /config
+          - name: wg-config
+            mountPath: /wg-config
+            readOnly: true
+      volumes:
+        - name: media
+          hostPath:
+            path: /home/renner/mount/archive/archive/Video/VIDEOS
+        - name: storage
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/transmission-wireguard/storage
+        - name: config
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/transmission-wireguard/configFiles/
+        - name: wg-config
+          secret:
+            secretName: transmission-wireguard-wg-secret
+            defaultMode: 0400
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-wireguard-service
+  labels:
+    app: transmission-wireguard
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 9091
+    port: 9091
+    nodePort: 31085
+  selector:
+    app: transmission-wireguard
+  type: NodePort
