@@ -30,6 +30,8 @@ spec:
             value: "1000"
           - name: CONFIG_FILE
             value: "/wg-config/nl-ams-wg-001.conf"
+          - name: TRANSMISSION_BIND_ADDRESS_IPV4
+            value: "0.0.0.0"
         volumeMounts:
           - name: media
             mountPath: /videos
