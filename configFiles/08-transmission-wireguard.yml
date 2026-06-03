@@ -15,7 +15,6 @@ spec:
       containers:
       - name: transmission-wireguard-container
         image: haugene/transmission-wireguard:main
-        imagePullPolicy: Always
         ports:
           - containerPort: 9091
         securityContext:

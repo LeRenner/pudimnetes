@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audiobookshelf-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audiobookshelf
+  template:
+    metadata:
+      labels:
+        app: audiobookshelf
+    spec:
+      containers:
+        - name: audiobookshelf-container
+          image: ghcr.io/advplyr/audiobookshelf:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: metadata-volume
+              mountPath: /metadata
+            - name: books-volume
+              mountPath: /audiobooks
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/audiobookshelf/config
+        - name: metadata-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/audiobookshelf/metadata
+        - name: books-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/audiobookshelf/books
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: audiobookshelf-service
+spec:
+  selector:
+    app: audiobookshelf
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: audiobookshelf-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bookshelf.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: audiobookshelf-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - bookshelf.pudim.xyz
+      secretName: audiobookshelf-tls

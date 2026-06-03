@@ -34,7 +34,7 @@ spec:
       volumes:
         - name: pudim-mailer-configmap-volume
           configMap:
-            name: telegram-messenger-configmap
+            name: pudim-mailer-configmap
             items:
               - key: hostname
                 path: hostname

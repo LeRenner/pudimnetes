@@ -55,7 +55,6 @@ spec:
   - protocol: TCP
     targetPort: 1883
     port: 1883
-    nodePort: 32032
   selector:
     app: mosquitto
-  type: NodePort
+  type: ClusterIP
