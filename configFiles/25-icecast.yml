@@ -45,24 +45,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: icecast-nodeport-service
-  labels:
-    app: icecast
-spec:
-  ports:
-  - protocol: TCP
-    targetPort: 8000
-    port: 8000
-    nodePort: 32051
-  selector:
-    app: icecast
-  type: NodePort
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
   name: icecast-clusterip-service
 spec:
   selector:
