@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrutiny-deployment
+  namespace: pudimnetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scrutiny
+  template:
+    metadata:
+      labels:
+        app: scrutiny
+    spec:
+      containers:
+        - name: scrutiny-container
+          image: ghcr.io/analogj/scrutiny:master-omnibus
+          imagePullPolicy: IfNotPresent
+
+          securityContext:
+            privileged: true
+
+          env:
+            - name: TZ
+              value: America/Sao_Paulo
+
+          ports:
+            - containerPort: 8080
+
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/scrutiny/config
+
+            - name: scrutiny-config
+              mountPath: /opt/scrutiny/config/scrutiny.yaml
+              subPath: scrutiny.yaml
+              readOnly: true
+
+            - name: dev
+              mountPath: /dev
+
+            - name: run-udev
+              mountPath: /run/udev
+              readOnly: true
+
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/scrutiny/config
+            type: DirectoryOrCreate
+
+        - name: scrutiny-config
+          secret:
+            secretName: scrutiny-config
+
+        - name: dev
+          hostPath:
+            path: /dev
+
+        - name: run-udev
+          hostPath:
+            path: /run/udev
