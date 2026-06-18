@@ -15,7 +15,7 @@ spec:
       containers:
         - name: icecast-container
           image: deepcomp/icecast2:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:

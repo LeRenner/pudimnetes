@@ -15,7 +15,7 @@ spec:
       containers:
         - name: icloud-sync-container
           image: mandarons/icloud-drive
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: PUID
               value: "1000"

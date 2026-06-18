@@ -36,7 +36,7 @@ spec:
               mountPath: /etc/caddy
             - name: host-files-folder
               mountPath: /var/www/html
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
       volumes:
         - name: files-config-vol
           configMap:

@@ -1,0 +1,359 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dawarich
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dawarich
+  namespace: dawarich
+  labels:
+    app: dawarich
+spec:
+  selector:
+    matchLabels:
+      app: dawarich
+  template:
+    metadata:
+      labels:
+        app: dawarich
+    spec:
+      containers:
+        - name: dawarich
+          env:
+            - name: TIME_ZONE
+              value: "America/Sao_Paulo"
+            - name: RAILS_ENV
+              value: development
+            - name: REDIS_URL
+              value: redis://dawarich-redis.dawarich.svc.cluster.local:6379/10
+            - name: DATABASE_HOST
+              value: dawarich-db.dawarich.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USERNAME
+              value: postgres
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dawarich-secret
+                  key: DATABASE_PASSWORD
+            - name: DATABASE_NAME
+              value: dawarich_development
+            - name: APPLICATION_HOST
+              value: localhost
+            - name: APPLICATION_HOSTS
+              value: "dawarich.pudim.xyz, localhost"
+            - name: APPLICATION_PROTOCOL
+              value: http
+            - name: PHOTON_API_HOST
+              value: photon.komoot.io
+            - name: PHOTON_API_USE_HTTPS
+              value: "true"
+            - name: RAILS_MIN_THREADS
+              value: "5"
+            - name: RAILS_MAX_THREADS
+              value: "10"
+          image: freikin/dawarich:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /var/app/public
+              name: public
+            - mountPath: /var/app/tmp/imports/watched
+              name: watched
+            - mountPath: /var/app/storage
+              name: storage
+          command:
+            - "web-entrypoint.sh"
+          args:
+            - "bin/rails server -p 3000 -b ::"
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "3Gi"
+              cpu: "2000m"
+          ports:
+          - containerPort: 3000
+        - name: dawarich-sidekiq
+          env:
+            - name: RAILS_ENV
+              value: development
+            - name: REDIS_URL
+              value: redis://dawarich-redis.dawarich.svc.cluster.local:6379/10
+            - name: DATABASE_HOST
+              value: dawarich-db.dawarich.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USERNAME
+              value: postgres
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dawarich-secret
+                  key: DATABASE_PASSWORD
+            - name: DATABASE_NAME
+              value: dawarich_development
+            - name: RAILS_MIN_THREADS
+              value: "5"
+            - name: RAILS_MAX_THREADS
+              value: "10"
+            - name: BACKGROUND_PROCESSING_CONCURRENCY
+              value: "20"
+            - name: APPLICATION_HOST
+              value: localhost
+            - name: APPLICATION_HOSTS
+              value: "dawarich.pudim.xyz, localhost"
+            - name: APPLICATION_PROTOCOL
+              value: http
+            - name: PHOTON_API_HOST
+              value: photon.komoot.io
+            - name: PHOTON_API_USE_HTTPS
+              value: "true"
+          image: freikin/dawarich:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /var/app/public
+              name: public
+            - mountPath: /var/app/tmp/imports/watched
+              name: watched
+            - mountPath: /var/app/storage
+              name: storage
+          command:
+            - "sidekiq-entrypoint.sh"
+          args:
+            - "bundle exec sidekiq"
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "3Gi"
+              cpu: "1500m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: public
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/dawarich/public
+        - name: watched
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/dawarich/watched
+        - name: storage
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/dawarich
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dawarich-db
+  namespace: dawarich
+spec:
+  selector:
+    app: dawarich-db
+
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dawarich-redis
+  namespace: dawarich
+spec:
+  selector:
+    app: dawarich-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dawarich-redis
+  namespace: dawarich
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dawarich-redis
+  template:
+    metadata:
+      labels:
+        app: dawarich-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.4-alpine
+        imagePullPolicy: Always
+        command:
+        - redis-server
+        - --save
+        - "900"
+        - "1"
+        - --save
+        - "300"
+        - "10"
+        - --appendonly
+        - "no"
+
+        ports:
+        - containerPort: 6379
+
+        volumeMounts:
+        - name: shared
+          mountPath: /data
+
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+      volumes:
+      - name: shared
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/dawarich/shared
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dawarich-db
+  namespace: dawarich
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dawarich-db
+  template:
+    metadata:
+      labels:
+        app: dawarich-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgis/postgis:17-3.5-alpine
+
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dawarich-secret
+              key: DATABASE_PASSWORD
+
+        - name: POSTGRES_DB
+          value: dawarich_development
+
+        ports:
+        - containerPort: 5432
+
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+
+        - name: shared
+          mountPath: /var/shared
+
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+            - -d
+            - dawarich_development
+          initialDelaySeconds: 20
+
+      volumes:
+      - name: db-data
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/dawarich/db_data
+
+      - name: shared
+        hostPath:
+          path: /home/renner/mount/archive/archive/special/k8s/dawarich/shared
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dawarich
+  labels:
+    service: dawarich
+  name: dawarich
+spec:
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: dawarich
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dawarich-ingress
+  namespace: dawarich
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: dawarich.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: dawarich
+                port:
+                  number: 3000
+  tls:
+    - hosts:
+        - dawarich.pudim.xyz
+      secretName: dawarich-tls
