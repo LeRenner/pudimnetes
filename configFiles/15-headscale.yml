@@ -1,0 +1,96 @@
+# headscale-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headscale-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: headscale
+  template:
+    metadata:
+      labels:
+        app: headscale
+    spec:
+      containers:
+        - name: headscale-container
+          image: headscale/headscale:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - serve
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/headscale
+            - name: data-volume
+              mountPath: /var/lib/headscale
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/headscale/config
+        - name: data-volume
+          hostPath:
+            path: /home/renner/mount/archive/archive/special/k8s/headscale/data
+
+---
+
+# headscale-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: headscale-service
+spec:
+  selector:
+    app: headscale
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: headscale-stun-service
+spec:
+  selector:
+    app: headscale
+  ports:
+    - name: stun
+      protocol: UDP
+      port: 3478
+      targetPort: 3478
+      nodePort: 32478
+  type: NodePort
+
+---
+
+# headscale-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headscale-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: headscale.pudim.xyz
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: headscale-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - headscale.pudim.xyz
+      secretName: headscale-tls
