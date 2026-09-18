@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: transmission-wireguard-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -28,7 +29,7 @@ spec:
           - name: PGID
             value: "1000"
           - name: CONFIG_FILE
-            value: "/wg-config/nl-ams-wg-001.conf"
+            value: "/wg-config/ar-bue-wg-002.conf"
           - name: TRANSMISSION_BIND_ADDRESS_IPV4
             value: "0.0.0.0"
         volumeMounts:
