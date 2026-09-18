@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tor-configmap
+  namespace: pudimnetes
 data:
   torrc: |
     DataDirectory /var/tor
@@ -15,6 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tor-pudim-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -36,7 +38,7 @@ spec:
               mountPath: /var/tor
       containers:
         - name: tor-container
-          image: osminogin/tor-simple:latest
+          image: osminogin/tor-simple:0.4.9.12
           volumeMounts:
             - name: tor-config-vol
               mountPath: /etc/tor

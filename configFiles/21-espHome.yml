@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: esphome-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -15,7 +16,7 @@ spec:
       hostNetwork: true
       containers:
       - name: esphome
-        image: esphome/esphome:latest  # Use the appropriate image tag
+        image: esphome/esphome:2026.9.0  # Use the appropriate image tag
         securityContext:
           privileged: true
         volumeMounts:

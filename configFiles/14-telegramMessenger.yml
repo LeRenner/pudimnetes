@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: telegram-messenger-configmap
+  namespace: pudimnetes
 data:
   hostname: |
     mosquitto-service.pudimnetes.svc.cluster.local
@@ -20,6 +21,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: telegram-messenger-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:

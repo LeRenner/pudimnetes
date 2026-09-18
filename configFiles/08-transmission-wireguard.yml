@@ -63,6 +63,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: transmission-wireguard-service
+  namespace: pudimnetes
   labels:
     app: transmission-wireguard
 spec:

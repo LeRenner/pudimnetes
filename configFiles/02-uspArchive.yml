@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: usp-configmap
+  namespace: pudimnetes
 data:
   Caddyfile: |
     :80 {
@@ -24,6 +25,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: usp-archive-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -36,7 +38,7 @@ spec:
     spec:
       containers:
         - name: usp-archive-container
-          image: caddy:latest
+          image: caddy:2.11.4
           ports:
           - containerPort: 80
           volumeMounts:
@@ -58,6 +60,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: usp-archive-service
+  namespace: pudimnetes
   labels:
     app: usp-archive
 spec:

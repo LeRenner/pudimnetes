@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: plex-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
         - name: plex-container
-          image: lscr.io/linuxserver/plex:latest
+          image: lscr.io/linuxserver/plex:1.43.4
           ports:
             - containerPort: 32400
           env:
@@ -52,6 +53,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: plex-service
+  namespace: pudimnetes
 spec:
   selector:
     app: plex

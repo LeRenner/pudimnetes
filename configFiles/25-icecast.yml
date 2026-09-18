@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: icecast-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -46,6 +47,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: icecast-clusterip-service
+  namespace: pudimnetes
 spec:
   selector:
     app: icecast
@@ -61,6 +63,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: icecast-ingress
+  namespace: pudimnetes
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd

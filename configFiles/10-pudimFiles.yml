@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: files-configmap
+  namespace: pudimnetes
 data:
   Caddyfile: |
     :80 {
@@ -16,6 +17,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pudim-files-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -28,7 +30,7 @@ spec:
     spec:
       containers:
         - name: pudim-files-container
-          image: caddy:latest
+          image: caddy:2.11.4
           ports:
           - containerPort: 80
           volumeMounts:
@@ -51,6 +53,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: pudim-files-service
+  namespace: pudimnetes
   labels:
     app: pudim-files
 spec:
@@ -68,6 +71,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pudim-files-ingress
+  namespace: pudimnetes
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-prod

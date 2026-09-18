@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jellyfin-deployment
+  namespace: pudimnetes
 spec:
   replicas: 1
   selector:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
         - name: jellyfin-container
-          image: jellyfin/jellyfin:latest
+          image: jellyfin/jellyfin:12.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8096  # Port your Jellyfin application listens on
@@ -48,6 +49,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jellyfin-service
+  namespace: pudimnetes
 spec:
   selector:
     app: jellyfin
@@ -64,6 +66,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jellyfin-ingress
+  namespace: pudimnetes
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
