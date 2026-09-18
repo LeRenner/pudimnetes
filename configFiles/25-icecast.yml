@@ -59,6 +59,23 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: icecast-nodeport-service
+  namespace: pudimnetes
+spec:
+  selector:
+    app: icecast
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 31077
+  type: NodePort
+
+---
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

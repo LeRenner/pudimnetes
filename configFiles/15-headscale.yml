@@ -67,7 +67,7 @@ spec:
       protocol: UDP
       port: 3478
       targetPort: 3478
-      nodePort: 32478
+      nodePort: 32096
   type: NodePort
 
 ---
