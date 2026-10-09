@@ -1,4 +1,3 @@
-# headscale-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,11 +21,25 @@ spec:
             - serve
           ports:
             - containerPort: 8080
+              protocol: TCP
           volumeMounts:
             - name: config-volume
               mountPath: /etc/headscale
             - name: data-volume
               mountPath: /var/lib/headscale
+
+        - name: stun
+          image: coturn/coturn:latest
+          args:
+            - -n
+            - --stun-only
+            - --no-cli
+            - --log-file=stdout
+            - --listening-port=3478
+          ports:
+            - containerPort: 3478
+              protocol: UDP
+
       volumes:
         - name: config-volume
           hostPath:
@@ -62,6 +75,7 @@ metadata:
 spec:
   selector:
     app: headscale
+  externalTrafficPolicy: Local
   ports:
     - name: stun
       protocol: UDP
