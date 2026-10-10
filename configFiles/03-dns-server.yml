@@ -9,14 +9,18 @@ data:
         bind 10.0.0.10
         errors
         cache 60
-        forward . 1.1.1.1 1.0.0.1
+        forward . 1.1.1.1 1.0.0.1 {
+          force_tcp
+        }
     }
 
     www.pudim.xyz:53 {
         bind 10.0.0.10
         errors
         cache 60
-        forward . 1.1.1.1 1.0.0.1
+        forward . 1.1.1.1 1.0.0.1 {
+          force_tcp
+        }
     }
 
     .:53 {
@@ -46,7 +50,9 @@ data:
         }
 
         cache 60
-        forward . 1.1.1.1 1.0.0.1
+        forward . 1.1.1.1 1.0.0.1 {
+          force_tcp
+        }
     }
 ---
 apiVersion: apps/v1
