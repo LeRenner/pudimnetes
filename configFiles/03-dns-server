@@ -1,0 +1,88 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-dns-config
+  namespace: pudimnetes
+data:
+  Corefile: |
+    .:53 {
+        
+        bind 10.0.0.10
+        errors
+        health :8080
+        ready :8181
+
+        template IN A {
+            match ^(.*\.)?pudim\.xyz\.$
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+            except relay.pudim.xyz. www.pudim.xyz.
+        }
+
+        template IN A {
+            match ^(.*\.)?notrenner\.dev\.$
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+        }
+
+        template IN A {
+            match ^(.*\.)?notrenner\.com\.$
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+        }
+
+        template IN A {
+            match ^(.*\.)?ren\.pet\.$
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+        }
+
+        cache 60
+        forward . 1.1.1.1 1.0.0.1
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home-dns
+  namespace: pudimnetes
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: home-dns
+  template:
+    metadata:
+      labels:
+        app: home-dns
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: thefluffynator-reborn
+      hostNetwork: true
+      dnsPolicy: Default
+      containers:
+        - name: coredns
+          image: coredns/coredns:1.12.4
+          args: ["-conf", "/etc/coredns/Corefile"]
+          ports:
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8181
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /etc/coredns
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: home-dns-config
