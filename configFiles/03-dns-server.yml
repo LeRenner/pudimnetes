@@ -55,8 +55,6 @@ spec:
       labels:
         app: home-dns
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: thefluffynator-reborn
       hostNetwork: true
       dnsPolicy: Default
       containers:
