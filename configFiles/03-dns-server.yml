@@ -90,18 +90,6 @@ spec:
             - name: dns-tcp
               containerPort: 53
               protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8181
-            initialDelaySeconds: 2
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
           volumeMounts:
             - name: config
               mountPath: /etc/coredns
