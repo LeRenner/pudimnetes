@@ -97,3 +97,54 @@ spec:
         - name: config
           configMap:
             name: home-dns-config
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns
+  namespace: pudimnetes
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      containers:
+        - name: cloudflare-ddns
+          image: favonia/cloudflare-ddns:1
+          env:
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-ddns
+                  key: token
+            - name: DOMAINS
+              value: proxy.pudim.xyz
+            - name: IP6_PROVIDER
+              value: none
+            - name: UPDATE_CRON
+              value: "@every 2m"
+            - name: UPDATE_ON_START
+              value: "true"
+          volumeMounts:
+            - name: cloudflare-token
+              mountPath: /run/secrets/cloudflare
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: cloudflare-token
+          secret:
+            secretName: cloudflare-ddns
