@@ -263,9 +263,7 @@ kind: Ingress
 metadata:
   name: immich-ingress
   namespace: immich
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
+  annotations:  
 spec:
   ingressClassName: traefik
   rules:
@@ -282,4 +280,4 @@ spec:
   tls:
     - hosts:
         - immich.pudim.xyz
-      secretName: immich-tls
+      secretName: pudim-wildcard-tls

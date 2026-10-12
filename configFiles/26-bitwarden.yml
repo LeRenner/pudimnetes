@@ -54,8 +54,6 @@ metadata:
   name: bitwarden-ingress
   namespace: pudimnetes
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
 spec:
   ingressClassName: traefik
   rules:
@@ -72,4 +70,4 @@ spec:
   tls:
     - hosts:
         - bitwarden.pudim.xyz
-      secretName: bitwarden-tls
+      secretName: pudim-wildcard-tls

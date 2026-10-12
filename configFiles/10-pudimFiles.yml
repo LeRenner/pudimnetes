@@ -73,8 +73,6 @@ metadata:
   name: pudim-files-ingress
   namespace: pudimnetes
   annotations:
-    
-    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
   rules:
@@ -91,5 +89,5 @@ spec:
   tls:
   - hosts:
     - files.pudim.xyz
-    secretName: pudim-files-tls-secret
+    secretName: pudim-wildcard-tls
 

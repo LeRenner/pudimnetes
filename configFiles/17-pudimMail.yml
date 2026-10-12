@@ -67,9 +67,7 @@ metadata:
   name: pudim-mailer-ingress
   namespace: pudimnetes
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/enable-cors: "true"
-    
+    traefik.ingress.kubernetes.io/enable-cors: "true" 
 spec:
   ingressClassName: traefik
   rules:
@@ -86,4 +84,4 @@ spec:
   tls:
     - hosts:
         - mail.pudim.xyz
-      secretName: pudim-mail-tls
+      secretName: pudim-wildcard-tls

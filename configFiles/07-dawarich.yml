@@ -338,8 +338,6 @@ metadata:
   name: dawarich-ingress
   namespace: dawarich
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
 spec:
   ingressClassName: traefik
   rules:
@@ -356,4 +354,4 @@ spec:
   tls:
     - hosts:
         - dawarich.pudim.xyz
-      secretName: dawarich-tls
+      secretName: pudim-wildcard-tls

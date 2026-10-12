@@ -9,6 +9,57 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-      - http01:
-          ingress:
-            class: traefik
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-dns01-token
+              key: api-token
+
+---
+
+# Three times because I want them in all three namespaces. I know: very silly.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pudim-wildcard
+  namespace: pudimnetes
+spec:
+  secretName: pudim-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - pudim.xyz
+    - "*.pudim.xyz"
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pudim-wildcard
+  namespace: immich
+spec:
+  secretName: pudim-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - pudim.xyz
+    - "*.pudim.xyz"
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pudim-wildcard
+  namespace: dawarich
+spec:
+  secretName: pudim-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - pudim.xyz
+    - "*.pudim.xyz"

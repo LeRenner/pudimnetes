@@ -82,8 +82,6 @@ metadata:
   name: icecast-ingress
   namespace: pudimnetes
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
 spec:
   ingressClassName: traefik
   rules:
@@ -100,4 +98,4 @@ spec:
   tls:
     - hosts:
         - radio.pudim.xyz
-      secretName: icecast-tls
+      secretName: pudim-wildcard-tls

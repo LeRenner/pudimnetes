@@ -68,8 +68,6 @@ metadata:
   name: jellyfin-ingress
   namespace: pudimnetes
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
 spec:
   ingressClassName: traefik
   rules:
@@ -86,4 +84,4 @@ spec:
   tls:
     - hosts:
         - jelly.pudim.xyz
-      secretName: jellyfin-tls  # Secret name for the TLS certificate
+      secretName: pudim-wildcard-tls

@@ -63,9 +63,7 @@ kind: Ingress
 metadata:
   name: audiobookshelf-ingress
   namespace: pudimnetes
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    
+  annotations: 
 spec:
   ingressClassName: traefik
   rules:
@@ -82,4 +80,4 @@ spec:
   tls:
     - hosts:
         - bookshelf.pudim.xyz
-      secretName: audiobookshelf-tls
+      secretName: pudim-wildcard-tls
