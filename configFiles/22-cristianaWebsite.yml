@@ -46,7 +46,7 @@ metadata:
   name: cristiana-ingress
   namespace: pudimnetes
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+    
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik

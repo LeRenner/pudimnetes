@@ -69,7 +69,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/enable-cors: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+    
 spec:
   ingressClassName: traefik
   rules:
