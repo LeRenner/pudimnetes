@@ -5,6 +5,46 @@ metadata:
   namespace: pudimnetes
 data:
   Corefile: |
+    relay.pudim.xyz:53 {
+        bind 10.0.0.10
+        errors
+        cache 60
+        forward . 1.1.1.1 1.0.0.1 {
+            force_tcp
+        }
+    }
+
+    www.pudim.xyz:53 {
+        bind 10.0.0.10
+        errors
+        cache 60
+        forward . 1.1.1.1 1.0.0.1 {
+            force_tcp
+        }
+    }
+
+    ren.pet:53 {
+        bind 10.0.0.10
+        errors
+        cache 60
+
+        header {
+            response set ra
+        }
+
+        template IN A ren.pet {
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+        }
+
+        template IN AAAA ren.pet {
+            rcode NOERROR
+        }
+
+        forward . 1.1.1.1 1.0.0.1 {
+            force_tcp
+        }
+    }
+
     .:53 {
         bind 10.0.0.10
         errors
@@ -15,13 +55,25 @@ data:
             response set ra
         }
 
-        # Local hairpin override: IPv4 only
-        template IN A home.pudim.xyz {
+        # Override A records for pudim.xyz and all its subdomains,
+        # except www and relay, which are handled by their own zones.
+        template IN A pudim.xyz {
+            match .*
             answer "{{ .Name }} 60 IN A 10.0.0.10"
+            fallthrough
         }
 
-        # Suppress Cloudflare's public IPv6 addresses locally
-        template IN AAAA home.pudim.xyz {
+        template IN A ren.pet {
+            match .*
+            answer "{{ .Name }} 60 IN A 10.0.0.10"
+            fallthrough
+        }
+
+        # Suppress IPv6 answers for the same local domain.
+        template IN AAAA pudim.xyz {
+            match .*
+            rcode NOERROR
+            fallthrough
         }
 
         cache 60
